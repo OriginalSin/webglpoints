@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+<head>
+    <title>Many Points with  leaflet WebGL</title>
+    <meta charset="utf-8">
+
+    <style>
+        html, body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            background: rgb(14, 21, 30);
+            height: 100%;
+        }
+
+        #map {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            background-color: #333;
+        }
+    </style>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+	  integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+	  crossorigin=""/>
+	<script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+	  integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+	  crossorigin=""></script>
+
+    <script src="L.CanvasOverlay.js"></script>
+	<script src="wind-gl.js"></script>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+
+        var leafletMap = L.map('map').setView([50.00, 14.44], 3);
+        L.tileLayer("http://tile2.maps.2gis.com/tiles?x={x}&y={y}&z={z}&v=4")
+        //L.tileLayer("http://{s}.sm.mapstack.stamen.com/(toner-lite,$fff[difference],$fff[@23],$fff[hsl-saturation@20])/{z}/{x}/{y}.png")
+            .addTo(leafletMap);
+
+// const pxRatio = Math.max(Math.floor(window.devicePixelRatio) || 1, 2);
+const pxRatio = 1;
+
+        var glLayer = L.canvasOverlay()
+                       .drawing(drawingOnCanvas)
+                       .addTo(leafletMap);
+        var canvas = glLayer.canvas();
+
+        glLayer.canvas.width = canvas.clientWidth;
+        glLayer.canvas.height = canvas.clientHeight;
+        var gl = canvas.getContext('experimental-webgl', { antialias: true });
+
+const wind = window.wind = new WindGL(gl);
+wind.numParticles = 65536;
+function frame() {
+    if (wind.windData) {
+        wind.draw();
+    }
+    requestAnimationFrame(frame);
+}
+frame();
+
+
+function updateZoom() {
+    const halfSize = 0.5 / Math.pow(2, leafletMap.getZoom());
+    wind.setBBox([
+        0.5 - halfSize,
+        0.5 - halfSize,
+        0.5 + halfSize,
+        0.5 + halfSize
+    ]);
+    // drawCoastline();
+    wind.resize();
+    wind.numParticles = wind.numParticles;
+}
+
+        function drawingOnCanvas(canvasOverlay, params) {
+    if (window.wind) {
+        updateZoom();
+    }
+    //wind.resize();
+console.log(canvasOverlay, params)
+            if (gl == null) return;
+/*
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+            pixelsToWebGLMatrix.set([2 / canvas.width, 0, 0, 0, 0, -2 / canvas.height, 0, 0, 0, 0, 0, 0, -1, 1, 0, 1]);
+            gl.viewport(0, 0, canvas.width, canvas.height);
+
+
+
+            var pointSize = Math.max(leafletMap.getZoom() - 4.0, 1.0);
+            gl.vertexAttrib1f(gl.aPointSize, pointSize);
+
+            // -- set base matrix to translate canvas pixel coordinates -> webgl coordinates
+            mapMatrix.set(pixelsToWebGLMatrix);
+
+            var bounds = leafletMap.getBounds();
+            var topLeft = new L.LatLng(bounds.getNorth(), bounds.getWest());
+            var offset = LatLongToPixelXY(topLeft.lat, topLeft.lng);
+
+            // -- Scale to current zoom
+            var scale = Math.pow(2, leafletMap.getZoom());
+            scaleMatrix(mapMatrix, scale, scale);
+
+            translateMatrix(mapMatrix, -offset.x, -offset.y);
+
+            // -- attach matrix value to 'mapMatrix' uniform in shader
+            gl.uniformMatrix4fv(u_matLoc, false, mapMatrix);
+            gl.drawArrays(gl.POINTS, 0, numPoints);
+*/
+        }
+
+function updateRetina() {
+    // const ratio = pxRatio;
+    // canvas.width = canvas.clientWidth * ratio;
+    // canvas.height = canvas.clientHeight * ratio;
+    wind.resize();
+}
+updateRetina();
+
+const windFiles = {
+    0: '2016112000',
+    6: '2016112006',
+    12: '2016112012',
+    18: '2016112018',
+    24: '2016112100',
+    30: '2016112106',
+    36: '2016112112',
+    42: '2016112118',
+    48: '2016112200'
+};
+
+
+function updateWind(name) {
+    fetch('wind/' + windFiles[name] + '.json', {
+	}).then(function (resp) {
+		return resp.json();
+	}).then(function (windData) {
+		console.log(windData)
+        const windImage = new Image();
+        windData.image = windImage;
+        windImage.src = 'wind/' + windFiles[name] + '.png';
+        windImage.onload = function () {
+            wind.setWind(windData);
+        };
+    });
+}
+updateWind(0);
+
+    </script>
+</body>
+</html>
