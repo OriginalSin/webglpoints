@@ -114,13 +114,13 @@
 	  integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
 	  crossorigin=""></script>
     <script src="L.CanvasOverlay.js"></script>
-    <script src="http://www.sumbera.com/gist/86T.json" charset="utf-8"></script>
+    <script src="./86T.json" charset="utf-8"></script>
 
 
     <script>
 
         var leafletMap = L.map('map').setView([50.00, 14.44], 8);
-        L.tileLayer("http://tile2.maps.2gis.com/tiles?x={x}&y={y}&z={z}&v=4")
+        L.tileLayer("//tile2.maps.2gis.com/tiles?x={x}&y={y}&z={z}&v=4")
         //L.tileLayer("http://{s}.sm.mapstack.stamen.com/(toner-lite,$fff[difference],$fff[@23],$fff[hsl-saturation@20])/{z}/{x}/{y}.png")
             .addTo(leafletMap);
 
